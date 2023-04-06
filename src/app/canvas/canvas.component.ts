@@ -1,6 +1,7 @@
 import { Component, ElementRef, Input, OnInit, ViewChild } from '@angular/core';
 import { Pixel } from '../models/pixel';
 import { PixelService } from '../services/PixelService';
+import { ToolbarService } from '../services/ToolbarService';
 
 @Component({
   selector: 'app-virtual-canvas',
@@ -12,12 +13,15 @@ export class VirtualCanvasComponent {
   @Input() cellSize = 10;
 
   pixels: Pixel[][] = [];
+  selectedColour: string = '#FF0000';
 
   private eventSource = new EventSource('http://192.168.2.17:3000/sse'); // will likely move this & relevant code to service
 
-  constructor(private pixelService: PixelService) {
+  constructor(
+    private pixelService: PixelService,
+    private toolbarService: ToolbarService
+  ) {
     this.eventSource.addEventListener("update", e => {
-      console.log('update event!');
       const pixel: Pixel = JSON.parse(e.data);
       this.drawPixel(pixel, pixel.x, pixel.y);
     });
@@ -31,6 +35,10 @@ export class VirtualCanvasComponent {
     canvas.height = height;
     this.createPixels();
     this.loadPixels();
+
+    this.toolbarService.getColourPickerValue().subscribe(value => {
+      this.selectedColour = value;
+    })
   }
 
   createPixels() {
@@ -51,31 +59,15 @@ export class VirtualCanvasComponent {
     this.pixelService.getPixels(0, 0, width, height)
       .subscribe(response => {
         this.pixels = response.pixels;
-        console.log(response.pixels);
         this.redraw();
       });
   }
-
-  // savePixels() {
-  //   const canvas = this.canvas.nativeElement;
-  //   const cols = this.pixels.length;
-  //   const rows = this.pixels[0].length;
-
-  //   for (let x = 0; x < cols; x++) {
-  //     for (let y = 0; y < rows; y++) {
-  //       const pixel = this.pixels[x][y];
-  //       this.pixelService.updatePixel(x, y, pixel.colour).subscribe(() => { });
-  //     }
-  //   }
-  // }
 
   redraw() {
     if (this.canvas) {
       const canvas = this.canvas.nativeElement;
       const ctx = canvas.getContext('2d') as CanvasRenderingContext2D;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      // ctx.fillStyle = 'white';
-      // ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       // Calculate the number of cells that fit in the canvas
       const numCellsWidth = Math.ceil(canvas.width / this.cellSize);
@@ -118,12 +110,10 @@ export class VirtualCanvasComponent {
         // Check if the x and y values are within the bounds of the pixels array
         if (x >= 0 && x < this.pixels.length && y >= 0 && y < this.pixels[x].length) {
           const pixel = this.pixels[x][y];
-          pixel.colour = 'red';
+          pixel.colour = this.selectedColour;
           pixel.owner = '';
           this.drawPixel(pixel, x, y);
           this.pixelService.updatePixel(x, y, pixel.colour).subscribe();
-          // this.redraw();
-          // this.savePixels();
         }
       } else if (event.button == 2) {
         // right click to drag canvas
