@@ -38,7 +38,6 @@ export class PixelService {
       })
     );
   }
-  
 
   updatePixel(x: number, y: number, colour: string): Observable<any> {
     const headers = new HttpHeaders({ 'Content-Type': 'application/x-www-form-urlencoded' });

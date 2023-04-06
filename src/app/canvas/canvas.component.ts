@@ -14,6 +14,7 @@ export class VirtualCanvasComponent {
 
   pixels: Record<string, Pixel> = {};
   selectedColour: string = '#FF0000';
+  offset = { x: 0, y: 0 };
 
   private eventSource = new EventSource('http://192.168.2.17:3000/sse'); // will likely move this & relevant code to service
 
@@ -47,8 +48,8 @@ export class VirtualCanvasComponent {
     const cols = Math.floor(width / this.cellSize);
     const rows = Math.floor(height / this.cellSize);
 
-    for (let x = 0; x < cols; x++) {
-      for (let y = 0; y < rows; y++) {
+    for (let x = this.offset.x; x < this.offset.x+cols; x++) {
+      for (let y = this.offset.y; y < this.offset.y+rows; y++) {
         const key = `${x}_${y}`;
         this.pixels[key] = new Pixel(key, 'white');
       }
@@ -59,7 +60,7 @@ export class VirtualCanvasComponent {
     const width = this.canvas.nativeElement.width;
     const height = this.canvas.nativeElement.height;
 
-    this.pixelService.getPixels(0, 0, width, height)
+    this.pixelService.getPixels(this.offset.x, this.offset.y, width, height)
       .subscribe(response => {
         this.pixels = response.pixels;
         this.redraw();
@@ -79,7 +80,7 @@ export class VirtualCanvasComponent {
       // Draw the pixels
       for (let x = 0; x < numCellsWidth; x++) {
         for (let y = 0; y < numCellsHeight; y++) {
-          const pixel = this.pixels[`${x}_${y}`];
+          const pixel = this.pixels[`${this.offset.x+x}_${this.offset.y+y}`];
           ctx.fillStyle = (pixel && pixel.colour) ? pixel.colour : 'white';
           ctx.fillRect(x * this.cellSize, y * this.cellSize, this.cellSize, this.cellSize);
         }
@@ -107,8 +108,10 @@ export class VirtualCanvasComponent {
     if (canvas) {
       if (event.button == 0) {
         const rect = canvas.getBoundingClientRect();
-        const x = Math.floor((event.clientX - rect.left) / this.cellSize);
-        const y = Math.floor((event.clientY - rect.top) / this.cellSize);
+        const screenX = Math.floor((event.clientX - rect.left) / this.cellSize);
+        const screenY = Math.floor((event.clientY - rect.top) / this.cellSize);
+        const x = this.offset.x + screenX;
+        const y = this.offset.y + screenY
 
         // Check if the x and y values are within the bounds of the pixels array
         const key = `${x}_${y}`;
@@ -116,7 +119,7 @@ export class VirtualCanvasComponent {
           const pixel = this.pixels[key];
           pixel.colour = this.selectedColour;
           pixel.owner = '';
-          this.drawPixel(pixel, x, y);
+          this.drawPixel(pixel, screenX, screenY);
           this.pixelService.updatePixel(x, y, pixel.colour).subscribe();
         }
       } else if (event.button == 2) {
