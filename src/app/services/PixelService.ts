@@ -7,7 +7,7 @@ import { Pixel } from '../models/pixel';
   providedIn: 'root'
 })
 export class PixelService {
-  private baseUrl = 'http://192.168.2.17:3000';
+  private baseUrl = 'http://192.168.2.17:3000'; // temp local ip (for testing on multiple PCs within same network)
 
   constructor(private http: HttpClient) { }
 

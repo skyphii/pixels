@@ -13,7 +13,15 @@ export class VirtualCanvasComponent {
 
   pixels: Pixel[][] = [];
 
-  constructor(private pixelService: PixelService) { }
+  private eventSource = new EventSource('http://192.168.2.17:3000/sse'); // will likely move this & relevant code to service
+
+  constructor(private pixelService: PixelService) {
+    this.eventSource.addEventListener("update", e => {
+      console.log('update event!');
+      const pixel: Pixel = JSON.parse(e.data);
+      this.drawPixel(pixel, pixel.x, pixel.y);
+    });
+  }
 
   ngOnInit() {
     const canvas = this.canvas.nativeElement;

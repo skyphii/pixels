@@ -3,6 +3,9 @@ const mysql = require('mysql');
 const cors = require('cors');
 const app = express();
 const bodyParser = require('body-parser');
+const EventEmitter = require('events');
+
+const Stream = new EventEmitter();
 
 const port = 3000;
 
@@ -129,8 +132,27 @@ app.post('/pixels/update', (req, res) => {
 
       // Return a success message
       res.send('Pixel updated successfully');
+
+      clients.forEach(c => {
+        c.write('event: update\n');
+        c.write(`data: {"x": ${x}, "y": ${y}, "colour": "${colour}"}`);
+        c.write('\n\n');
+      });
     });
   });
+});
+
+clients = [];
+
+app.get('/sse', function(request, response) {
+  response.writeHead(200, {
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache',
+    Connection: 'keep-alive'
+  });
+  clients.push(response);
+
+  response.write('connected\n\n');
 });
 
 // Start the server
