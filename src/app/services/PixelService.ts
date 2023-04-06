@@ -15,34 +15,24 @@ export class PixelService {
     return this.http.get<Pixel>(`${this.baseUrl}/pixel?x=${x}&y=${y}`);
   }
 
-  getPixels(x: number, y: number, width: number, height: number): Observable<{ pixels: Pixel[][] }> {
+  getPixels(x: number, y: number, width: number, height: number): Observable<{ pixels: { [key: string]: Pixel } }> {
     return this.http.get<{ pixels: Pixel[] }>(`${this.baseUrl}/pixels?x=${x}&y=${y}&width=${width}&height=${height}`).pipe(
       map(response => {
-        var pixels: Pixel[][] = [];
+        const pixels: { [key: string]: Pixel } = {};
 
-        for (let x = 0; x < width; x++) {
-          if(!pixels[x]) pixels[x] = [];
-          for (let y = 0; y < height; y++) {
-            pixels[x][y] = new Pixel('#FFFFFF');
+        for (let i = x; i < x + width; i++) {
+          for (let j = y; j < y + height; j++) {
+            const key = `${i}_${j}`;
+            pixels[key] = new Pixel('#FFFFFF');
           }
         }
-
+  
         if(response.pixels) {
           response.pixels.forEach(p => {
-            if(!pixels[p.x]) pixels[p.x] = [];
-            pixels[p.x][p.y] = new Pixel(p.colour, p.owner);
+            const key = `${p.x}_${p.y}`;
+            pixels[key] = new Pixel(p.colour, p.owner);
           });
         }
-        // if (!response.pixels) response.pixels = [];
-        // var pixels = response.pixels;
-  
-        // for (let x = 0; x < pixels.length; x++) {
-        //   if(!pixels[x]) pixels[x] = [];
-        //   for (let y = 0; y < pixels[x].length; y++) {
-        //     if (!pixels[x]) pixels[x] = [];
-        //     if (!pixels[x][y]) pixels[x][y] = new Pixel("#ffffff");
-        //   }
-        // }
   
         return { pixels };
       })

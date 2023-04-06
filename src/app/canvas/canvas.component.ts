@@ -12,7 +12,7 @@ export class VirtualCanvasComponent {
   @ViewChild('canvas', { static: true }) canvas!: ElementRef<HTMLCanvasElement>;
   @Input() cellSize = 10;
 
-  pixels: Pixel[][] = [];
+  pixels: Record<string, Pixel> = {};
   selectedColour: string = '#FF0000';
 
   private eventSource = new EventSource('http://192.168.2.17:3000/sse'); // will likely move this & relevant code to service
@@ -47,9 +47,12 @@ export class VirtualCanvasComponent {
     const cols = Math.floor(width / this.cellSize);
     const rows = Math.floor(height / this.cellSize);
 
-    this.pixels = new Array(rows).fill(null)
-      .map(() => new Array(cols).fill(null)
-        .map(() => new Pixel('', 'white')));
+    for (let x = 0; x < cols; x++) {
+      for (let y = 0; y < rows; y++) {
+        const key = `${x}_${y}`;
+        this.pixels[key] = new Pixel(key, 'white');
+      }
+    }
   }
 
   loadPixels() {
@@ -74,9 +77,9 @@ export class VirtualCanvasComponent {
       const numCellsHeight = Math.ceil(canvas.height / this.cellSize);
 
       // Draw the pixels
-      for (let x = 0; x < this.pixels.length; x++) {
-        for (let y = 0; y < this.pixels[x].length; y++) {
-          const pixel = this.pixels[x][y];
+      for (let x = 0; x < numCellsWidth; x++) {
+        for (let y = 0; y < numCellsHeight; y++) {
+          const pixel = this.pixels[`${x}_${y}`];
           ctx.fillStyle = (pixel && pixel.colour) ? pixel.colour : 'white';
           ctx.fillRect(x * this.cellSize, y * this.cellSize, this.cellSize, this.cellSize);
         }
@@ -108,8 +111,9 @@ export class VirtualCanvasComponent {
         const y = Math.floor((event.clientY - rect.top) / this.cellSize);
 
         // Check if the x and y values are within the bounds of the pixels array
-        if (x >= 0 && x < this.pixels.length && y >= 0 && y < this.pixels[x].length) {
-          const pixel = this.pixels[x][y];
+        const key = `${x}_${y}`;
+        if (key in this.pixels) {
+          const pixel = this.pixels[key];
           pixel.colour = this.selectedColour;
           pixel.owner = '';
           this.drawPixel(pixel, x, y);
