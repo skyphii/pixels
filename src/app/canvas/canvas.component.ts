@@ -39,7 +39,15 @@ export class VirtualCanvasComponent {
 
     this.toolbarService.getColourPickerValue().subscribe(value => {
       this.selectedColour = value;
-    })
+    });
+    this.toolbarService.getTeleport().subscribe(value => {
+      this.teleport(value);
+    });
+  }
+
+  teleport(coords: {x: number, y: number}) {
+    this.offset = coords;
+    this.loadPixels();
   }
 
   createPixels() {
