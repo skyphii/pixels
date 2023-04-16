@@ -23,6 +23,11 @@ export class ToolbarComponent {
            this.updateColour(); 
         });
 
+        this.toolbarService.getColourPickerValue().subscribe(value => {
+           this.colourPicker.value = value;
+           this.updateColour();
+        });
+
         this.updateColour();
     }
 

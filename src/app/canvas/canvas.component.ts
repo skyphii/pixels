@@ -15,6 +15,7 @@ export class VirtualCanvasComponent {
   pixels: Record<string, Pixel> = {};
   selectedColour: string = '#FF0000';
   offset = { x: 0, y: 0 };
+  eyedropper: boolean = false;
 
   private eventSource = new EventSource('http://192.168.2.17:3000/sse'); // will likely move this & relevant code to service
 
@@ -43,12 +44,16 @@ export class VirtualCanvasComponent {
     this.toolbarService.getTeleport().subscribe(value => {
       this.teleport(value);
     });
+    this.toolbarService.getEyeDropper().subscribe(value => {
+      this.eyedropper = value;
+    });
   }
 
   teleport(coords: {x: number, y: number}) {
     this.offset = coords;
     this.loadPixels();
-  }
+  } // next steps: probably just teleport to -y to avoid all the flipping y axis problems
+    // next: load pixels when dragging (will need to create new pixels in the blank space and unload old pixels out of view)
 
   createPixels() {
     const width = this.canvas.nativeElement.width;
@@ -125,10 +130,15 @@ export class VirtualCanvasComponent {
         const key = `${x}_${y}`;
         if (key in this.pixels) {
           const pixel = this.pixels[key];
-          pixel.colour = this.selectedColour;
-          pixel.owner = '';
-          this.drawPixel(pixel, screenX, screenY);
-          this.pixelService.updatePixel(x, y, pixel.colour).subscribe();
+          if(this.eyedropper) {
+            this.toolbarService.setColourPickerValue(pixel.colour);
+            this.toolbarService.toggleEyeDropper();
+          }else {
+            pixel.colour = this.selectedColour;
+            pixel.owner = '';
+            this.drawPixel(pixel, screenX, screenY);
+            this.pixelService.updatePixel(x, y, pixel.colour).subscribe();
+          }
         }
       } else if (event.button == 2) {
         // right click to drag canvas
