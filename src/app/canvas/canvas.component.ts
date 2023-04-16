@@ -70,13 +70,16 @@ export class VirtualCanvasComponent {
   }
 
   loadPixels() {
-    const width = this.canvas.nativeElement.width;
-    const height = this.canvas.nativeElement.height;
+    const canvas = this.canvas.nativeElement;
+    const width = canvas.width;
+    const height = canvas.height;
 
     this.pixelService.getPixels(this.offset.x, this.offset.y, width, height)
       .subscribe(response => {
         this.pixels = response.pixels;
         this.redraw();
+        canvas.style.left = '0px';
+        canvas.style.top = '0px';
       });
   }
 
@@ -146,19 +149,25 @@ export class VirtualCanvasComponent {
         const rect = canvas.getBoundingClientRect();
         var startX = event.clientX;
         var startY = event.clientY;
+        var moveX = 0;
+        var moveY = 0;
         const onMouseMove = (moveEvent: MouseEvent) => {
           const deltaX = moveEvent.clientX - startX;
           const deltaY = moveEvent.clientY - startY;
-          const newLeft = canvas.offsetLeft + deltaX;
-          const newTop = canvas.offsetTop + deltaY;
-          canvas.style.left = newLeft + 'px';
-          canvas.style.top = newTop + 'px';
+          moveX = canvas.offsetLeft + deltaX;
+          moveY = canvas.offsetTop + deltaY;
+          canvas.style.left = moveX + 'px';
+          canvas.style.top = moveY + 'px';
           startX = moveEvent.clientX;
           startY = moveEvent.clientY;
         };
         const onMouseUp = () => {
+          this.offset.x += -Math.ceil(moveX/this.cellSize);
+          this.offset.y += -Math.ceil(moveY/this.cellSize);
           document.removeEventListener('mousemove', onMouseMove);
           document.removeEventListener('mouseup', onMouseUp);
+          
+          this.loadPixels();
         };
         document.addEventListener('mousemove', onMouseMove);
         document.addEventListener('mouseup', onMouseUp);
