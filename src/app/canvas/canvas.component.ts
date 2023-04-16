@@ -147,12 +147,6 @@ export class VirtualCanvasComponent {
         var startX = event.clientX;
         var startY = event.clientY;
         const onMouseMove = (moveEvent: MouseEvent) => {
-          if (moveEvent.buttons !== 2) {
-            // stop dragging if right mouse button is released
-            document.removeEventListener('mousemove', onMouseMove);
-            document.removeEventListener('mouseup', onMouseUp);
-            return;
-          }
           const deltaX = moveEvent.clientX - startX;
           const deltaY = moveEvent.clientY - startY;
           const newLeft = canvas.offsetLeft + deltaX;

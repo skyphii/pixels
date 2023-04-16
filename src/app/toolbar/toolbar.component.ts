@@ -25,15 +25,17 @@ export class ToolbarComponent {
 
         this.toolbarService.getColourPickerValue().subscribe(value => {
            this.colourPicker.value = value;
-           this.updateColour();
+           this.colourPicker.style.backgroundColor = value;
+           localStorage.setItem('selectedColour', this.colourPicker.value); // cache colour
         });
 
         this.updateColour();
     }
 
     updateColour() {
-        this.colourPicker.style.backgroundColor = this.colourPicker.value;
-        this.toolbarService.setColourPickerValue(this.colourPicker.value);
+        const colour = this.colourPicker.value;
+        this.colourPicker.style.backgroundColor = colour;
+        this.toolbarService.setColourPickerValue(colour);
 
         localStorage.setItem('selectedColour', this.colourPicker.value); // cache colour
     }

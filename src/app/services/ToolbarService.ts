@@ -5,18 +5,18 @@ import { BehaviorSubject } from 'rxjs';
   providedIn: 'root'
 })
 export class ToolbarService {
-  private colourPickerValue = new BehaviorSubject<string>('#FF0000');
+  private colourPicker = new BehaviorSubject<string>('#FF0000');
   private tpCoords = new BehaviorSubject({x: 0, y: 0});
   private eyedropperActive = new BehaviorSubject<boolean>(false);
 
   constructor() { }
 
   setColourPickerValue(value: string) {
-    this.colourPickerValue.next(value);
+    this.colourPicker.next(value);
   }
 
   getColourPickerValue() {
-    return this.colourPickerValue.asObservable();
+    return this.colourPicker.asObservable();
   }
 
   setTeleport(value: {x: number, y: number}) {
